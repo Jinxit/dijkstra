@@ -153,11 +153,9 @@ namespace dijkstra
             auto it = paths.find(std::make_pair(start, goal));
             if (it != paths.end())
             {
-                std::cout << "free!" << std::endl;
                 return it->second;
             }
 
-            std::cout << "exploring" << std::endl;
             // otherwise do some exploring
             explore(start, {goal});
 
