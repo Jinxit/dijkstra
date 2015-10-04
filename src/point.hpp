@@ -12,7 +12,6 @@ namespace dijkstra
         float distance(point const* other) const;
         float distance(const point& other) const;
         const std::vector<point*>& get_links() const;
-        std::vector<point*>& get_links();
         void connect(point* other);
 
         float x;

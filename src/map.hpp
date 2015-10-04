@@ -39,7 +39,6 @@ namespace dijkstra
         void insert(const path& p);
 
         std::vector<point> graph;
-        std::unordered_map<std::pair<point const*, point const*>,
-                           path> paths;
+        std::unordered_map<std::pair<point const*, point const*>, path> paths;
     };
 }

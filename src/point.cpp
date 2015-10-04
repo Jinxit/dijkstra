@@ -19,10 +19,6 @@ namespace dijkstra
     {
         return links;
     }
-    std::vector<point*>& point::get_links()
-    {
-        return links;
-    }
 
     void point::connect(point* other)
     {
