@@ -33,6 +33,7 @@ namespace dijkstra
             auto start = closest(p1);
             std::vector<point const*> goals;
             goals.reserve(points.size());
+            // find the closest for each goal
             std::transform(points.begin(), points.end(),
                            std::back_inserter(goals),
                            [&](const point& x) { return closest(x); });
@@ -89,6 +90,7 @@ namespace dijkstra
 
         while (!unvisited.empty())
         {
+            // pop the smallest one
             auto current = unvisited.begin();
 
             for (auto link : current->first->get_links())
@@ -103,8 +105,10 @@ namespace dijkstra
                     [&](std::pair<point const*, float> kvp) {
                         return kvp.first == link;
                     });
+                // if the node is in the 'unvisited' map
                 if (it != unvisited.end())
                 {
+                    // use the shorter path of the previous and the current
                     if (tentative < it->second)
                     {
                         unvisited.emplace(link, tentative);
@@ -113,19 +117,24 @@ namespace dijkstra
                 }
                 else
                 {
+                    // if it's not in the map, add it
                     unvisited.emplace(link, tentative);
                     previous[link] = current->first;
                 }
 
                 visited[link] = current->second;
 
+                // if this is a goal node
                 auto goals_it = std::find(goals.begin(), goals.end(), link);
                 if (goals_it != goals.end())
                 {
+                    // remove it as a goal
                     goals.erase(goals_it);
 
+                    // if it was the last goal
                     if (goals.size() == 0)
                     {
+                        // we done yo
                         insert_all(visited, previous);
                         return;
                     }
@@ -138,6 +147,9 @@ namespace dijkstra
     void map::insert_all(const std::unordered_map<point const*, float>& visited,
                     const std::unordered_map<point const*, point const*>& previous)
     {
+        // inserts all subpaths of a path
+
+        // every node in visited is known to be optimal
         for (auto& node : visited)
         {
             path p;
@@ -146,6 +158,8 @@ namespace dijkstra
             auto it = previous.end();
             while ((it = previous.find(p.front())) != previous.end())
             {
+                // add one node from the path
+
                 // TODO: don't recompute full path
                 // maybe incorporate into push_back and add a pop_front
                 p.insert(p.begin(), it->second);
@@ -155,6 +169,7 @@ namespace dijkstra
                 path p2 = p;
                 while (p2.size() > 2)
                 {
+                    // and remove on the other end until done
                     p2.pop_back();
                     p2.compute_length();
                     insert(p2);
