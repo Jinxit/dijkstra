@@ -133,38 +133,21 @@ namespace dijkstra
         {
             for (auto& p1 : points)
             {
-                for (auto& p2 : points)
-                {
-                    // TODO: multiple goals at once, less overhead
-                    find(p1, p2);
-                }
+                auto start = closest(p1);
+                std::vector<point const*> goals;
+                goals.reserve(points.size());
+                std::transform(points.begin(), points.end(),
+                               std::back_inserter(goals),
+                               [&](const point& x) { return closest(x); });
+
+                explore(start, goals);
             }
         }
 
         path& find(const point& start_approx, const point& goal_approx)
         {
-            std::cout << "finding from " << start_approx << " to " << goal_approx << std::endl;
-            point const* start = nullptr;
-            float min_start = INFINITY;
-            point const* goal = nullptr;
-            float min_goal = INFINITY;
-
-            // find the points already in the map which are the closest
-            // to the approximate points
-            for (auto& node : graph)
-            {
-                float dist = 0;
-                if ((dist = start_approx.distance(node)) < min_start)
-                {
-                    min_start = dist;
-                    start = &node;
-                }
-                if ((dist = goal_approx.distance(node)) < min_goal)
-                {
-                    min_goal = dist;
-                    goal = &node;
-                }
-            }
+            auto start = closest(start_approx);
+            auto goal = closest(goal_approx);
 
             // if it already exists: it's memoized, return it
             auto it = paths.find(std::make_pair(start, goal));
@@ -176,14 +159,32 @@ namespace dijkstra
 
             std::cout << "exploring" << std::endl;
             // otherwise do some exploring
-            explore(start, goal);
+            explore(start, {goal});
 
             // entry should now exist
             return paths[std::make_pair(start, goal)];
         }
 
     private:
-        void explore(point const* start, point const* goal)
+        point const* closest(const point& p_approx)
+        {
+            point const* p = nullptr;
+            float min_p = INFINITY;
+
+            for (auto& node : graph)
+            {
+                float dist = p_approx.distance(node);
+                if (dist < min_p)
+                {
+                    min_p = dist;
+                    p = &node;
+                }
+            }
+
+            return p;
+        }
+
+        void explore(point const* start, std::vector<point const*> goals)
         {
             std::set<std::pair<point const*, float>, priority_compare> unvisited;
             std::unordered_map<point const*, float> visited;
@@ -224,10 +225,16 @@ namespace dijkstra
 
                     visited[link] = current->second;
 
-                    if (link == goal)
+                    auto goals_it = std::find(goals.begin(), goals.end(), link);
+                    if (goals_it != goals.end())
                     {
-                        insert_all(visited, previous);
-                        return;
+                        goals.erase(goals_it);
+
+                        if (goals.size() == 0)
+                        {
+                            insert_all(visited, previous);
+                            return;
+                        }
                     }
                 }
                 unvisited.erase(current);
